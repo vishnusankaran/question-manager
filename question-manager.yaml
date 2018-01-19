@@ -1,0 +1,70 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: SwaggerNodeJSDemo
+# during dev, should point to your local machine
+host: localhost:3000
+# basePath prefixes all resource paths
+basePath: /api/v1
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  # - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /questions:
+    get:
+      description: return questions for given topic
+      parameters:
+        - name: topic
+          in: path
+          description: topic for questions
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Questions"
+
+# complex objects have schema definitions
+definitions:
+  Question:
+    required:
+      - topic
+      - questionId
+      - questionName
+      - answers
+    properties:
+      questionId:
+        type: string
+      questionName:
+        type: string   
+      answers:
+        type: array
+        items:
+          $ref: "#/definitions/Answers"
+  Answers:
+    required:
+        - option
+        - isCorrect
+    properties:
+      option:
+        type: string
+      isCorrect:
+        type: boolean
+  Questions:
+    type: array
+    items:
+      $ref: "#/definitions/Question"
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
