@@ -17,15 +17,30 @@ consumes:
 produces:
   - application/json
 paths:
-  /questions:
+  /topics/{topicId}/questions:
     get:
       description: return questions for given topic
       parameters:
-        - name: topic
+        - name: topicId
           in: path
-          description: topic for questions
+          description: Id of the topic
           required: true
           type: string
+        - name: limit
+          in: query
+          description: number of questions
+          required: true
+          type: int
+        - name: level
+          in: query
+          description: difficulty level
+          required: true
+          type: int
+        - name: page
+          in: query
+          description: page number
+          required: true
+          type: int
       responses:
         "200":
           description: Success
@@ -36,14 +51,13 @@ paths:
 definitions:
   Question:
     required:
-      - topic
-      - questionId
-      - questionName
+      - id
+      - title
       - answers
     properties:
-      questionId:
+      id:
         type: string
-      questionName:
+      title:
         type: string   
       answers:
         type: array
@@ -51,10 +65,10 @@ definitions:
           $ref: "#/definitions/Answers"
   Answers:
     required:
-        - option
+        - value
         - isCorrect
     properties:
-      option:
+      value:
         type: string
       isCorrect:
         type: boolean
