@@ -1,7 +1,8 @@
 import express from 'express';
+import topics from './topics';
 
 const router = express.Router();
 
-router.use('/topics', require('./topics'));
+router.use('/topics', topics);
 
-module.exports = router;
+export default router;

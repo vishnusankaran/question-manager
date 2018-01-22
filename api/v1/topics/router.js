@@ -6,14 +6,13 @@ const router = express.Router();
 /**
  * Effective URL is GET /topics/:topicId/questions
  */
-router.get('/:topicId/questions', (req, res) => {
+router.get('/:topic/questions', (req, res) => {
   try {
-    req.status(200).send(controller.getQuestions());
+    controller.getQuestions(res, req.params.topic, { limit: req.query.limit || 10, page: req.query.limit || 1 });
   } catch (err) {
-    console.error('Unexpected error in getting questions, ERROR::', err);
     res.status(500).send({ error: 'Unable to get questions.' });
     return;
   }
 });
 
-module.exports = router;
+export default router;

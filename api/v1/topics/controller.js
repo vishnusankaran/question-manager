@@ -1,9 +1,5 @@
 import service  from './service';
 
-const getQuestions = function(done) {
-  service.getQuestions(done);
-}
+const getQuestions = (res, topic, options) => service.getQuestions(res, topic, options);
 
-module.exports = {
-    getQuestions
-}
+export default { getQuestions };
