@@ -1,3 +1,3 @@
 # Data Accumulator
 
-Accumulate data from the wikidata and pass it to Redis.
+Accumulate data from redis and store it to cassandra.
