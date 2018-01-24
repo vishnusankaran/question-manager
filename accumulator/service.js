@@ -13,16 +13,13 @@ const updateQuestions = ({ topic, question, answer, distractors }) => {
         value: item,
         isCorrect: false
     }))) ].sort(() => (.5 - Math.random()));
-    console.log(arr);
-    arr = arr.map(item => JSON.stringify(item));
-    console.log(arr);
-    client.execute(`INSERT INTO qm.ques (question, answer, topic) VALUES ('${ question }', [ ${ arr.map((item)=>item.replace(/"/g, "'")).join(",") } ], '${ topic }')`)
-    .then(result => {
-        console.log(result.rows);
-    })
-    .catch((err) => {
-        throw err;
-    });
+    let row = {
+        question,
+        topic,
+        answer: arr
+    };
+
+    client.execute(`INSERT INTO qm.ques JSON '${ JSON.stringify(row) }'`);
 }
 
 export default { updateQuestions };
