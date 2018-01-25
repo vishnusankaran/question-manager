@@ -10,7 +10,6 @@ client.connect(function (err) {
 const getQuestions = (res, topic, { limit }) => {
     client.execute(`SELECT * FROM qm.ques WHERE topic = '${ topic }' LIMIT ${ limit }`)
         .then(result => {
-            console.log(result.rows);
             res.status(200).send(result.rows);
         });
 }
