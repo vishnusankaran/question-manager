@@ -9,7 +9,7 @@ client.connect(err => {
     client.execute(`CREATE KEYSPACE IF NOT EXISTS qm WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 1 };`);
     client.execute(`USE qm;`);
     client.execute(`CREATE TYPE IF NOT EXISTS answer (value text, isCorrect boolean);`);
-    client.execute(`CREATE TABLE IF NOT EXISTS ques (question text, answer list<frozen <answer>>, topic text, PRIMARY KEY (question));`);
+    client.execute(`CREATE TABLE IF NOT EXISTS qm.ques (question text, answer list<frozen <answer>>, topic text, PRIMARY KEY (question));`);
     client.execute(`CREATE INDEX IF NOT EXISTS topic_index ON qm.ques (topic);`);
 });
 
