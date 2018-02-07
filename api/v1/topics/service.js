@@ -1,17 +1,31 @@
 import cassandra from 'cassandra-driver';
+import mongoose from 'mongoose';
+import config from '../../../config';
+import StubModal from './entity/stub';
 
-const client = new cassandra.Client({contactPoints: ['127.0.0.1']});
+mongoose.connect(config.MONGO.URL);
+mongoose.connection.on('connected', function() {
+    console.log('Mongoose is now connected to ', config.MONGO.URL);
+});
 
-client.connect(function (err) {
+const cassandraClient = new cassandra.Client({contactPoints: [config.CASSANDRA.URL]});
+cassandraClient.connect(function (err) {
     if (err) return console.error(err);
-    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    console.log('Connected to cluster with %d host(s): %j', cassandraClient.hosts.length, cassandraClient.hosts.keys());
 });
 
 const getQuestions = (res, topic, { limit }) => {
-    client.execute(`SELECT * FROM qm.ques WHERE topic = '${ topic }' LIMIT ${ limit }`)
+    cassandraClient.execute(`SELECT * FROM qm.ques WHERE topic = '${ topic }' LIMIT ${ limit }`)
         .then(result => {
             res.status(200).send(result.rows);
         });
 }
 
-export default { getQuestions };
+const createStubs = (res, topic, { stubs }) => {
+    StubModal.insertMany(stubs, {ordered:false}, (err, response) => {
+        if (err) throw err;
+        res.status(200).send(response);
+    });
+}
+
+export default { getQuestions, createStubs };

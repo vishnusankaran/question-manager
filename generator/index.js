@@ -1,43 +1,36 @@
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const path = require("path");
-const http = require('https');
-const redis = require('redis');
-const request = require('superagent');
+import express  from 'express';
+import bodyParser from 'body-parser';
+import request from 'superagent';
+import path from "path";
+import http from 'https';
+import redis from 'redis';
+import mongoose from 'mongoose';
+import config from '../config';
+import StubModel from '../api/v1/topics/entity/stub';
 
-/* Create Redis client*/
-let client = redis.createClient();
-client.on('connect', function(){
+const app = express();
+const redisClient = redis.createClient();
+
+redisClient.on('connect', () => {
     console.log('Connected to Redis..');
-})
+});
+
+mongoose.connect(config.MONGO.URL);
+mongoose.connection.on('connected', function() {
+    console.log('Mongoose is now connected to ', config.MONGO.URL);
+});
 
 const listen = () => {
-    const questionObject = {
-        topic: "cricket",
-        query: `SELECT ?personLabel ?placeOfBirthLabel ?countryOfBirthLabel ?countryOfBirth
-                    WHERE {
-                        ?person wdt:P106 wd:Q12299841.
-                        ?person wdt:P19 ?placeOfBirth.
-                        ?placeOfBirth wdt:P17
-                        ?countryOfBirth.
-                    
-                    SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
-                } LIMIT 10`,
-        questionTemplate: 'Where was {{query.personLabel}} born?',
-        answerTemplate: '{{query.placeOfBirthLabel}}',
-        distractors: {
-            count: 3,
-            query: `SELECT ?placeLabel ?countryLabel
-                        WHERE {
-                            ?place wdt:P31 wd:Q515.
-                            ?place wdt:P17 {{questionQuery.countryOfBirthLabel}}.
-                        SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
-                    } LIMIT 3`,
-            distractorTemplate: '{{query.placeOfBirthLabel}}'
+    redisClient.brpop('topics', 200, (list, [ listName, topic ]) => {
+        if (topic) {
+            StubModel.find({ topic }, (err, stubs) => {
+                if (err) throw err;
+                stubs.forEach(stub => queryData(stub));
+            }); 
+
+            process.nextTick(listen);
         }
-    };
-    queryData(questionObject);
+    });
 }
 
 const queryData = ({ query, questionTemplate, topic, answerTemplate, distractors }) => {          
@@ -45,14 +38,16 @@ const queryData = ({ query, questionTemplate, topic, answerTemplate, distractors
 
     request.get(url)
         .set('Accept', 'application/sparql-results+json')
-        .query({ query })
+        .query({ query: query.replace(/\"/g, '"') })
         .end((err, res) => {
+            console.log('Results recieved');
             if(err) { console.error('ERR:', err); process.exit(-1); }
             let results = res.body.results.bindings.forEach((r) => {
                 request.get(url)
                     .set('Accept', 'application/sparql-results+json')
                     .query({ query: distractors.query.replace('{{questionQuery.countryOfBirthLabel}}', `wd:${r.countryOfBirth.value.split('/')[4]}`) })
                     .end((err, dist) => {
+                        if(err) { console.error('ERR:', err); process.exit(-1); }
                         let distractorArray = dist.body.results.bindings.filter((d, i) => i < distractors.count).map((d, i) => {
                             return distractors.distractorTemplate.replace('{{query.placeOfBirthLabel}}',d.placeLabel.value);
                         });
@@ -62,7 +57,7 @@ const queryData = ({ query, questionTemplate, topic, answerTemplate, distractors
                             topic,
                             distractors: distractorArray
                         };
-                        client.lpush('questions', JSON.stringify(results));
+                        redisClient.lpush('questions', JSON.stringify(results));
                     });
             });
         });
