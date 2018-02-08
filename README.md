@@ -99,29 +99,50 @@ This app listens to the Redis. The Social Module is expected to 'lpush' new topi
 ## Data Models
 ### QUESTION
 `{
+
     question: "string",
+
     answer: [ 
+
         {
+
             value: "string",
+
             isCorrect: boolean
+
         }
+
     ],
+
     topic: "string"
+    
 }`
 
 ### STUB
 `{
-	stubs: [{
+
+    stubs: [{
+
 	    "topic": "string",
+
 	    "query": "string",
+
 	    "questionTemplate": "string",
+
 	    "answerTemplate": "string",
+
 	    "distractors": {
+
 	        "count": "number",
+
 	        "query": "string",
+
 	        "distractorTemplate": "string"
+
 	    }
+
 	}]
+
 }`
 
 ## Built With
